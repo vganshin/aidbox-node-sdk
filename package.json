@@ -1,0 +1,28 @@
+{
+  "name": "aidbox-example",
+  "version": "1.0.0",
+  "description": "aidbox example plugin",
+  "main": "index.js",
+  "scripts": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Aidbox/aidbox-node-sdk.git"
+  },
+  "keywords": [
+    "FHIR",
+    "aidbox",
+    "nodejs"
+  ],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Aidbox/aidbox-node-sdk/issues"
+  },
+  "homepage": "https://github.com/Aidbox/aidbox-node-sdk#readme",
+  "dependencies": {
+    "request": "^2.88.0",
+    "ws": "^6.0.0"
+  }
+}
