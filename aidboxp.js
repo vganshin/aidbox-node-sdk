@@ -1,5 +1,5 @@
-const WebSocket = require('ws');
 const request = require('request');
+const http = require('http');
 
 let registry = null;
 
@@ -7,9 +7,8 @@ function register(manifest){
   registry = manifest;
 };
 
-var channel = {};
 
-function mkctx(opts, socket) {
+function mkctx(opts, httpresp) {
   return {
     opts: opts,
     query: (sql)=>{
@@ -29,21 +28,28 @@ function mkctx(opts, socket) {
       });
     },
     response: (resp)=>{
-      socket.send(JSON.stringify(resp));
+      httpresp.end(JSON.stringify(resp));
     }
   };
 }
 
-function dispatch(opts, msg){
-  console.log("Message", JSON.stringify(msg)); 
-  var opid = msg.operation.id;
-  var handler = registry["operations"][opid];
-  if(handler.handler){
-    handler.handler(mkctx(opts, channel.socket), msg);
-  } else {
-    channel.socket.send(JSON.stringify({body: "Ups no handler!"}));
-  }
+function dispatch(opts, req, resp){
+  let body = '';
+  req.on('data', chunk => {
+    body += chunk.toString(); // convert Buffer to string
+  });
+  req.on('end', () => {
+    var msg = JSON.parse(body);
+    var opid = msg.operation.id;
+    var handler = registry["operations"][opid];
+    if(handler.handler){
+      handler.handler(mkctx(opts, resp), msg);
+    } else {
+      resp.end(JSON.stringify({body: "Ups no handler!", operation: msg.operation}));
+    }
+  });
 }
+
 
 function mk_url(opts){
   var path = Array.prototype.slice.call(arguments, 1);
@@ -59,6 +65,7 @@ function connect(opts, cb){
   return new Promise(function(resolve, reject) {
     var init_url = mk_url(opts, 'Addon', '$init');
     console.log('Init Addon at ', init_url);
+    registry.endpoint = opts.endpoint;
     request({
       url: init_url,
       method: 'POST',
@@ -67,39 +74,52 @@ function connect(opts, cb){
     }, (err, resp, body) => {
       if(err){
         console.error(err);
+        reject(err);
         return false;
+      } else {
+        console.log("Register addon", JSON.stringify(body));
+        resolve(body);
       }
-      console.log("Register addon", JSON.stringify(body));
-
-      var vs_url = mk_ws_url(opts,'Addon', '$socket');
-      console.log("Connecting to socket at", vs_url);
-      const ws = new WebSocket(vs_url, {
-        perMessageDeflate: false
-      });
-
-      ws.on('open', () => {
-        console.log('Connected!');
-        channel.socket = ws;
-      });
-
-      ws.on('message', (data) => {
-        dispatch(opts, JSON.parse(data));
-      });
     });
   });
 }
 
+
 function server(){
+  const host = process.env.SERVICE_HOST || 'localhost';
+  const port = process.env.SERVICE_PORT || 3334;
+  const schema = process.env.SERVICE_SCHEMA || 'http';
+
   const aidbox_host   = process.env.AIDBOX_HOST || 'localhost';
   const aidbox_schema = process.env.AIDBOX_SCHEMA || 'http';
   const aidbox_port   = process.env.AIDBOX_PORT || 8080;
 
-  connect({
+  const opts = {
     host: aidbox_host,
     port: aidbox_port,
-    schema: aidbox_schema
+    schema: aidbox_schema,
+    endpoint: {
+      host: host,
+      port: port,
+      schema: schema
+    }
+  };
+
+  const srv = http.createServer((req, resp)=>{
+    dispatch(opts, req, resp);
   });
 
+  connect(opts).then((data)=>{
+    srv.listen(port, (err) => {
+      if (err) {
+        return console.log('something bad happened', err);
+      }
+      console.log(`server is listening on ${port}`);
+      return true;
+    });
+  }).catch((e)=>{
+    console.log(`Can not connect to aidbox ${aidbox_host}/${aidbox_port}`, e );
+  });
 }
 
 let aidbox = {
