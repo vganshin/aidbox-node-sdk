@@ -1,10 +1,11 @@
 {
-  "name": "aidbox-example",
-  "version": "1.0.0",
+  "name": "aidbox",
+  "version": "0.0.1",
   "description": "aidbox example plugin",
-  "main": "index.js",
+  "main": "src/index.js",
   "scripts": {
-    "test": "test"
+    "test": "jest && npm run lint",
+    "lint": "eslint src/*.js"
   },
   "repository": {
     "type": "git",
@@ -15,8 +16,8 @@
     "aidbox",
     "nodejs"
   ],
-  "author": "",
-  "license": "ISC",
+  "author": "Health Samurai",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/Aidbox/aidbox-node-sdk/issues"
   },
@@ -24,5 +25,9 @@
   "dependencies": {
     "request": "^2.88.0",
     "ws": "^6.0.0"
+  },
+  "devDependencies": {
+    "eslint": "^5.2.0",
+    "jest": "^23.4.1"
   }
 }

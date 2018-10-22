@@ -1,0 +1,17 @@
+sudo: false
+language: node_js
+node_js:
+- 10.7.0
+cache:
+  directories:
+  - node_modules
+script:
+- npm test
+deploy:
+  provider: npm
+  email: niquola@gmail.com
+  api_key:
+    secure: XttJz5pxrb7j6ZmG2dmmrCpN3mn3kvGoVoEEnfOntq1K1Sdv215ttPB0YlRGIof7Y18N8P8qM4Y57rQqsY5GCfkxriNtWYcini9lmy8BCgGGlk4Yzw6rq/H18MklCyvv77WgRR2mN5aO6oa4H/Js4rz0lR0i461o0xS4gEZlcM1mMLj6yNV39i7+WR72DO9WoANyj/tkPgGxyqdHoQew3bFdTSQFp5g6YVbYicGDpFlZWAke1O+TRHfDamcPEiYGGGhRkxfToOlMGKFD5T/ynnxaAVZB9jqGEeR3d8tb52AFGd+E3rMQnt2N7HLNL8jWtCNKWAr6UCX09Z73nHn9WrQkYWtK96F9iXr3hhIEkP7FiSF60ARVGlmQeCSY6aDA06AKm1dBnmpHC9L1Ohz8CdY/G0VB9wPl0upBvxEQpRBXxT+wn67YSv30nkfPGy22E96h+B/pfcVftMLHJoS8qIo8WGQkFxGdvy8DsTgwai/d+ZWjLBDahWd3PwhPtoLHO84/VNHJ0fb3xieFmNN/OjDDfgwoPJFa2idk9xF1302zhFQF/Qqy7ds8fHHQlXHAve6fSTNzyd171BqYLvqfFpPlZFyKRXQ9RqR+4Pnl02HwVYE1nSlMa2L+DZqZFXA6gqYIDUHWdT+g26vQ3TCAd31r41eY94DPBMxJkw6T420=
+  on:
+    tags: true
+    repo: Aidbox/aidbox-node-sdk
