@@ -12,6 +12,9 @@ PGUSER=postgres
 PGPASSWORD=postgres
 PGDATABASE=devbox
 
+APP_PORT=3333
+APP_HOST=localhost
+
 PGIMAGE=aidbox/aidboxdb:0.0.1-alpha6
 #AIDBOX_IMAGE=healthsamurai/devbox:local
 AIDBOX_IMAGE=healthsamurai/devbox:edge
