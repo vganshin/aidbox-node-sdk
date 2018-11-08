@@ -19,7 +19,7 @@ cache:
   directories:
   - node_modules
 script:
-- npm test
+- npm test || docker-compose logs --tail=200  devbox && fail
 deploy:
   provider: npm
   email: niquola@gmail.com
