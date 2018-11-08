@@ -16,4 +16,4 @@ rules:
     - error
     - always
   no-console:
-    - 1
+    - 0

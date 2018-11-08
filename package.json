@@ -4,8 +4,8 @@
   "description": "aidbox example plugin",
   "main": "src/index.js",
   "scripts": {
-    "test": "jest && npm run lint",
-    "example": "node src/example.js",
+    "test": "jest --forceExit && npm run lint",
+    "example": "node example.js",
     "lint": "eslint src/*.js"
   },
   "repository": {

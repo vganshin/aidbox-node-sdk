@@ -1,10 +1,7 @@
 const request = require('request');
 const http = require('http');
-const api = require('./api');
 const fs = require('fs');
 const path = require('path');
-
-let registry = null;
 
 function mk_url(ctx, opts){
   var box = ctx.box;
@@ -51,8 +48,15 @@ function mk_query(ctx) {
   };
 }
 
+function mk_request(ctx) {
+  return function(opts){
+    return box_request(ctx, opts);
+  };
+}
+
 function mk_ctx(ctx){
   ctx.query = mk_query(ctx);
+  ctx.request = mk_request(ctx);
   return ctx;
 }
 
@@ -68,6 +72,7 @@ function dispatch(ctx, req, resp){
       var op = ctx.manifest.operations[opid];
       console.log('dispatch [' + opid + ']');
       var h = op.handler;
+      resp.setHeader('Content-Type', 'application/json');
       if(h){
         ctx.response = (r)=>{
           resp.end(JSON.stringify(r));
@@ -87,35 +92,6 @@ function dispatch(ctx, req, resp){
   });
 }
 
-
-// function mk_ws_url(opts){
-//   var path = Array.prototype.slice.call(arguments, 1);
-//   return 'ws' + '://' + opts.host + ':' + opts.port + '/' + path.join('/');
-// }
-
-function connect(opts){
-  return new Promise(function(resolve, reject) {
-    var init_url = mk_url(opts, 'App');
-    console.log('Init App at ', init_url);
-    registry.endpoint = opts.endpoint;
-    request({
-      url: init_url,
-      method: 'POST',
-      json: true,
-      body: opts
-    }, (err, resp, body) => {
-      if(err){
-        console.error(err);
-        reject(err);
-        return false;
-      } else {
-        console.log("Register addon", JSON.stringify(body));
-        resolve(body);
-      }
-    });
-  });
-}
-
 var env_vars = [
   ['AIDBOX_CLIENT_ID'],
   ['AIDBOX_CLIENT_SECRET'],
@@ -132,15 +108,15 @@ function load_env(){
     var res = fs.readFileSync(envfile, 'UTF-8');
     if(res){
       env = res.split(/\n/)
-          .filter((x)=> {
-            return x !== '' && x[0] != '#' && x.indexOf('=') > -1 ;
-          }).reduce((acc, x)=> {
-            var idx = x.indexOf('=');
-            var k = x.substr(0, idx);
-            var v = x.substr(idx+1);
-            acc[k] = v;
-            return acc; 
-          }, env);
+        .filter((x)=> {
+          return x !== '' && x[0] != '#' && x.indexOf('=') > -1 ;
+        }).reduce((acc, x)=> {
+          var idx = x.indexOf('=');
+          var k = x.substr(0, idx);
+          var v = x.substr(idx+1);
+          acc[k] = v;
+          return acc; 
+        }, env);
     }
   }
   env_vars.reduce((acc, x)=>{
@@ -190,40 +166,33 @@ function init_manifest(ctx){
     body: ctx.manifest
   });
 }
+var srv = null;
 
 function server(manifest){
   var ctx = to_config(load_env(), manifest);
   ctx = mk_ctx(ctx);
   // console.log("Context:", JSON.stringify(ctx, null, ' '));
-  init_manifest(ctx).then((res)=>{
-    const srv = http.createServer((req, resp)=>{
-      dispatch(ctx, req, resp);
+  return new Promise(function(resolve, reject) {
+    init_manifest(ctx).then(()=>{
+      srv = http.createServer((req, resp)=>{
+        dispatch(ctx, req, resp);
+      });
+      srv.listen(ctx.app.port, (err) => {
+        if (err) { return console.log('something bad happened', err); }
+        console.log(`server is listening on ${ctx.app.port}`);
+        resolve(ctx);
+        return true;
+      });
+    }).catch((e)=>{
+      reject(e);
+      console.log("ERROR:", e.statusCode || e, e.body);
     });
-    srv.listen(ctx.app.port, (err) => {
-      if (err) { return console.log('something bad happened', err); }
-      console.log(`server is listening on ${ctx.app.port}`);
-      return true;
-    });
-  }).catch((e)=>{
-    console.log("ERROR:", e.statusCode || e, e.body);
   });
-
-
-  // connect(opts).then(()=>{
-  //   srv.listen(port, (err) => {
-  //     if (err) {
-  //       return console.log('something bad happened', err);
-  //     }
-  //     console.log(`server is listening on ${port}`);
-  //     return true;
-  //   });
-  // }).catch((e)=>{
-  //   console.log(`Can not connect to aidbox ${aidbox_host}/${aidbox_port}`, e );
-  // });
 }
 
-let aidbox = {
-  start: server
+module.exports = {
+  start: server,
+  stop: ()=>{
+    srv && srv.close(); 
+  }
 };
-
-module.exports = aidbox;
