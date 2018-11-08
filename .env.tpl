@@ -13,5 +13,5 @@ PGPASSWORD=postgres
 PGDATABASE=devbox
 
 PGIMAGE=aidbox/aidboxdb:0.0.1-alpha6
+#AIDBOX_IMAGE=healthsamurai/devbox:local
 AIDBOX_IMAGE=healthsamurai/devbox:edge
-AIDBOX_IMAGE=healthsamurai/devbox:local
