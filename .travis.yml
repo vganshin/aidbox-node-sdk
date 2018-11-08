@@ -8,8 +8,7 @@ before_install:
   - sudo mv docker-compose /usr/local/bin
   - cp .env.tpl .env
   - docker-compose up -d
-  - sleep 20
-  - docker-compose logs --tail=20  devbox
+  - for i in {1..100}; do curl --silent localhost:7777 > /dev/null && break || echo -n '.' && sleep 1; done
 
 language: node_js
 
