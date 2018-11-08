@@ -97,7 +97,10 @@ var env_vars = [
   ['AIDBOX_CLIENT_SECRET'],
   ['AIDBOX_PORT'],
   ['AIDBOX_SCHEME'],
-  ['AIDBOX_HOST', 'localhost']
+  ['AIDBOX_HOST', 'localhost'],
+  ['APP_HOST'],
+  ['APP_PORT'],
+  ['APP_SCHEME']
 ];
 
 function load_env(){
