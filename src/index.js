@@ -171,7 +171,7 @@ var srv = null;
 function server(manifest){
   var ctx = to_config(load_env(), manifest);
   ctx = mk_ctx(ctx);
-  // console.log("Context:", JSON.stringify(ctx, null, ' '));
+  console.log("Context:", JSON.stringify(ctx, null, ' '));
   return new Promise(function(resolve, reject) {
     init_manifest(ctx).then(()=>{
       srv = http.createServer((req, resp)=>{
