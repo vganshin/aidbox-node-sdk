@@ -8,6 +8,8 @@ before_install:
   - sudo mv docker-compose /usr/local/bin
   - cp .env.tpl .env
   - docker-compose up -d
+  - sleep 20
+  - docker-compose logs -f devbox
 
 language: node_js
 
