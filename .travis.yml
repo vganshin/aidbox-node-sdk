@@ -9,7 +9,7 @@ before_install:
   - cp .env.tpl .env
   - docker-compose up -d
   - sleep 20
-  - docker-compose logs -f devbox
+  - docker-compose logs --tail=20  devbox
 
 language: node_js
 
