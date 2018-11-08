@@ -5,6 +5,7 @@
   "main": "src/index.js",
   "scripts": {
     "test": "jest && npm run lint",
+    "example": "node src/example.js",
     "lint": "eslint src/*.js"
   },
   "repository": {
