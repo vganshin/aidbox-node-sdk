@@ -1,23 +1,16 @@
 const request = require('request');
 const http = require('http');
-const fs = require('fs');
-const path = require('path');
-
-function mk_url(ctx, opts){
-  var box = ctx.box;
-  return box.scheme + '://' + box.host + ':' + box.port + opts.url;
-}
 
 function box_request(ctx, opts){
   return new Promise(function(resolve, reject) {
-    var init_url = mk_url(ctx, opts);
+    var init_url = ctx.env.init_url + opts.url;
     console.log('Request:', opts.method, init_url);
     request(Object.assign(opts, {
       url: init_url,
       json: true,
       auth: {
-        user: ctx.box.client.id,
-        pass: ctx.box.client.secret
+        user: ctx.env.init_client_id,
+        pass: ctx.env.init_client_secret
       }
     }), (err, resp, body) => {
       if(err){
@@ -60,7 +53,7 @@ function mk_ctx(ctx){
   return ctx;
 }
 
-function dispatch(ctx, req, resp){
+function dispatch(ctx, req, resp) {
   let body = '';
   req.on('data', chunk => {
     body += chunk.toString(); // convert Buffer to string
@@ -73,13 +66,13 @@ function dispatch(ctx, req, resp){
       console.log('dispatch [' + opid + ']');
       var h = op.handler;
       resp.setHeader('Content-Type', 'application/json');
-      if(h){
-        ctx.response = (r)=>{
+      if (h) {
+        ctx.response = (r) => {
           resp.end(JSON.stringify(r));
         };
         var p = h(ctx, msg);
         if(p && p.catch){
-          p.catch((err)=>{
+          p.catch((err) => {
             resp.end(JSON.stringify({status: 500, body: {error: err}}));
           });
         }
@@ -92,100 +85,31 @@ function dispatch(ctx, req, resp){
   });
 }
 
-var env_vars = [
-  ['AIDBOX_CLIENT_ID'],
-  ['AIDBOX_CLIENT_SECRET'],
-  ['AIDBOX_PORT'],
-  ['AIDBOX_SCHEME'],
-  ['AIDBOX_HOST', 'localhost'],
-  ['APP_HOST'],
-  ['APP_PORT'],
-  ['APP_URL'],
-  ['APP_SECRET'],
-  ['APP_SCHEME']
-];
-
-function load_env(){
-  var envfile= path.resolve(process.cwd(), '.env');
-  var env = {};
-  console.log('Check .env file', envfile, fs.existsSync(envfile));
-  if(fs.existsSync(envfile)) {
-    var res = fs.readFileSync(envfile, 'UTF-8');
-    if(res){
-      env = res.split(/\n/)
-        .filter((x)=> {
-          return x !== '' && x[0] != '#' && x.indexOf('=') > -1 ;
-        }).reduce((acc, x)=> {
-          var idx = x.indexOf('=');
-          var k = x.substr(0, idx);
-          var v = x.substr(idx+1);
-          acc[k] = v;
-          return acc;
-        }, env);
-    }
-  }
-  env_vars.reduce((acc, x)=>{
-    var v = process.env[x[0]] || env[x[0]] || x[1];
-    if(v && v != '') {
-      acc[x[0]] = v;
-    }
-    return acc;
-  }, env);
-
-  return env;
-}
-
-function to_config(env, manifest){
-  var app = {
-    url: env.APP_URL || 'http://localhost:3333',
-    type: 'http-rpc',
-    secret: env.APP_SECRET || null
-  };
-  var ctx = {
-    box: {
-      scheme: env.AIDBOX_SCHEME || 'http',
-      host: env.AIDBOX_HOST || 'localhost',
-      port: env.AIDBOX_PORT,
-      client: {
-        id: env.AIDBOX_CLIENT_ID,
-        secret: env.AIDBOX_CLIENT_SECRET
-      }
-    },
-    app: Object.assign({}, app, { port: env.APP_PORT || '3333' }),
-    manifest: Object.assign(manifest, {
-      resourceType: 'App',
-      apiVersion: 1,
-      type: 'app',
-      endpoint: app
-    })
-  };
-  return ctx;
-}
-
-
 function init_manifest(ctx){
   return box_request(ctx, {
-    url: '/App',
+    url: '/App/$init',
     method: 'post',
-    body: ctx.manifest
+    body: {
+      url: ctx.env.app_url,
+      secret: ctx.env.app_secret
+    }
   });
 }
 var srv = null;
 
-function server(manifest){
-  var ctx = to_config(load_env(), manifest);
+function server(ctx) {
   ctx = mk_ctx(ctx);
   console.log("Context:", JSON.stringify(ctx, null, ' '));
   return new Promise(function(resolve, reject) {
-    init_manifest(ctx).then(()=>{
-      srv = http.createServer((req, resp)=>{
+    init_manifest(ctx).then((body)=>{
+      console.log(body);
+      srv = http.createServer((req, resp) => {
         dispatch(ctx, req, resp);
       });
-      srv.listen(ctx.app.port, (err) => {
+      srv.listen(ctx.env.app_port, (err) => {
         if (err) { return console.log('something bad happened', err); }
-        console.log(`server is listening on ${ctx.app.port}`);
+        console.log(`server is listening on ${ctx.env.app_port}`);
         resolve(ctx);
-        return true;
       });
     }).catch((e)=>{
       reject(e);
