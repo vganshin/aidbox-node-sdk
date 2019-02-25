@@ -100,6 +100,8 @@ var env_vars = [
   ['AIDBOX_HOST', 'localhost'],
   ['APP_HOST'],
   ['APP_PORT'],
+  ['APP_URL'],
+  ['APP_SECRET'],
   ['APP_SCHEME']
 ];
 
@@ -118,7 +120,7 @@ function load_env(){
           var k = x.substr(0, idx);
           var v = x.substr(idx+1);
           acc[k] = v;
-          return acc; 
+          return acc;
         }, env);
     }
   }
@@ -135,10 +137,9 @@ function load_env(){
 
 function to_config(env, manifest){
   var app = {
-    host: env.APP_HOST || 'localhost',
-    port: parseInt(env.APP_PORT || '3333'),
-    scheme: env.APP_SCHEME || 'http',
-    type: 'http-rpc'
+    url: env.APP_URL || 'http://localhost:3333',
+    type: 'http-rpc',
+    secret: env.APP_SECRET || null
   };
   var ctx = {
     box: {
@@ -150,7 +151,7 @@ function to_config(env, manifest){
         secret: env.AIDBOX_CLIENT_SECRET
       }
     },
-    app: app,
+    app: Object.assign({}, app, { port: env.APP_PORT || '3333' }),
     manifest: Object.assign(manifest, {
       resourceType: 'App',
       apiVersion: 1,
@@ -196,6 +197,6 @@ function server(manifest){
 module.exports = {
   start: server,
   stop: ()=>{
-    srv && srv.close(); 
+    srv && srv.close();
   }
 };

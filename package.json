@@ -25,10 +25,10 @@
   "homepage": "https://github.com/Aidbox/aidbox-node-sdk#readme",
   "dependencies": {
     "request": "^2.88.0",
-    "ws": "^6.0.0"
+    "ws": "^6.1.4"
   },
   "devDependencies": {
-    "eslint": "^5.2.0",
-    "jest": "^23.4.1"
+    "eslint": "^5.14.1",
+    "jest": "^23.6.0"
   }
 }
