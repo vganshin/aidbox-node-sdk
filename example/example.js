@@ -1,15 +1,16 @@
 var aidbox = require('../src/index.js');
 
-function report(ctx) {
-  console.log("my handler");
-  return ctx.query("SELECT count(*) FROM Attribute")
+function report(ctx, msg) {
+  console.log('my operation handler\nctx:', ctx, '\nmsg:', msg);
+  return ctx.query('select count(*) FROM Attribute')
     .then((data) => {
-      console.log("data", data);
-      ctx.response({
-        body: data[0].count,
-        status: 200
-      });
+      console.log('box response:', JSON.stringify(data, null, ' '));
+      return Promise.resolve({count: data[0].count});
     });
+}
+
+function userSub(ctx, msg) {
+  console.log('my userSub handler\nctx:', ctx, '\nmsg:', msg);
 }
 
 var APP_ID =  process.env.APP_ID || 'app-example';
@@ -27,6 +28,12 @@ var ctx = {
   },
   manifest: {
     id: APP_ID,
+    type: 'app',
+    subscriptions: {
+      User: {
+        handler: userSub
+      }
+    },
     operations: {
       report: {
         method: 'GET',

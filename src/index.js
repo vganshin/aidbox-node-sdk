@@ -1,32 +1,38 @@
 const request = require('request');
 const http = require('http');
 
+const registredSubscription = {};
+
 function box_request(ctx, opts){
   return new Promise(function(resolve, reject) {
-    var init_url = ctx.env.init_url + opts.url;
+    const init_url = `${ctx.env.init_url}${opts.url}`;
     console.log('Request:', opts.method, init_url);
-    var params = {
+    const params = {
       url: init_url,
       json: true
     };
-    if (ctx.env.init_client_id && ctx.env.init_client_secret) {
+    if (ctx.state && ctx.state.id && ctx.state.secret) {
+      params.auth = {
+        user: ctx.state.id,
+        pass: ctx.state.secret
+      };
+    } else if (ctx.env.init_client_id && ctx.env.init_client_secret) {
       params.auth = {
         user: ctx.env.init_client_id,
         pass: ctx.env.init_client_secret
       };
     }
-    request(Object.assign(opts, params), (err, resp, body) => {
-      if(err){
+    const request_params = Object.assign({}, opts, params);
+    request(request_params, (err, resp, body) => {
+      if (err) {
         console.error(err);
         reject(err);
-        return false;
       } else {
         if(resp.statusCode && resp.statusCode < 300){
           resolve(body);
         } else {
           reject(resp);
         }
-        return true;
       }
     });
   });
@@ -34,8 +40,8 @@ function box_request(ctx, opts){
 
 function mk_query(ctx) {
   return function(){
-    var q = Array.prototype.slice.call(arguments, 0);
-    console.log("SQL:", q);
+    const q = Array.prototype.slice.call(arguments, 0);
+    console.log('SQL:', JSON.strigify(q, null, ' '));
     return box_request(ctx, {
       url: '/$sql',
       method: 'post',
@@ -57,12 +63,34 @@ function mk_ctx(ctx){
 }
 
 function mk_manifest(ctx) {
-  var rt = { resourceType: "App",
-             apiVersion: 1,
-             endpoint: { url: ctx.env.app_url,
-                         type: "http-rpc",
-                         secret: ctx.env.app_secret }};
-  return Object.assign({}, ctx.manifest, rt);
+  const rt = {
+    resourceType: 'App',
+    apiVersion: 1,
+    type: ctx.type || 'app',
+    endpoint: {
+      url: ctx.env.app_url,
+      type: 'http-rpc',
+      secret: ctx.env.app_secret
+    }};
+  const manifest  = Object.assign({}, ctx.manifest, rt);
+  if (manifest.subscriptions) {
+    const subs = manifest.subscriptions;
+    Object.keys(subs).forEach((s) => {
+      Object.keys(subs[s]).forEach((h) => {
+        const id = `${s}_${h}`;
+        console.log(`register subscription [${s}] for handler: ${h} by id ${id}`);
+        registredSubscription[id] = subs[s][h];
+        manifest.subscriptions[s][h] = id;
+      });
+    });
+  }
+  console.log('mk_manifest: ', JSON.stringify(manifest, null, ' '));
+  return manifest;
+}
+
+function sendResponse(r, status, message) {
+  r.statusCode = status;
+  r.end(JSON.stringify(message));
 }
 
 function dispatch(ctx, req, resp) {
@@ -72,36 +100,48 @@ function dispatch(ctx, req, resp) {
   });
   req.on('end', () => {
     resp.setHeader('Content-Type', 'application/json');
-    console.log("Msg", body);
     try {
-      var msg = JSON.parse(body);
-      // var opid = msg.operation.id;
-      var opid = msg.type;
-      if (opid === 'manifest') {
-        resp.end(JSON.stringify({ manifest: mk_manifest(ctx),
-                                  status: 200}));
-        return;
-      } else if (opid === 'config' || opid === 'subscription') {
-        resp.end(JSON.stringify({}));
-        return;
-      }
-      var op = ctx.manifest.operations[opid];
-      console.log('dispatch [' + opid + ']');
-      var h = op.handler;
-      if (h) {
-        ctx.response = (r) => {
-          resp.end(JSON.stringify(r));
-        };
-        var p = h(ctx, msg);
-        if(p && p.catch){
-          p.catch((err) => {
-            resp.end(JSON.stringify({status: 500, body: {error: err}}));
-          });
+      const msg = JSON.parse(body);
+      const operation = msg.type;
+      if (operation === 'manifest') {
+        console.log('manifest', JSON.stringify(msg, null, ' '));
+        sendResponse(resp, 200, {status: 200, manifest: mk_manifest(ctx)});
+      } else if (operation === 'config') {
+        console.log('config', JSON.stringify(msg, null, ' '));
+        ctx.state = msg.client;
+        sendResponse(resp, 200, {});
+      } else if (operation === 'subscription') {
+        console.log('subscription', JSON.stringify(msg, null, ' '));
+        sendResponse(resp, 200, {status: 200, message: 'Subscription'});
+        const handlerId = msg.handler;
+        if (handlerId in registredSubscription) {
+          registredSubscription[handlerId](ctx, msg);
+          sendResponse(resp, 200, {});
+        } else {
+          sendResponse(resp, 404, {status: 404, message: `Subscription [${handlerId}] not found`});
+        }
+      } else if (operation === 'operation') {
+        const operationId = msg.operation.id;
+        console.log('operation', JSON.stringify(msg, null, ' '));
+        if (operationId in ctx.manifest.operations) {
+          const operation = ctx.manifest.operations[operationId];
+          if (operation.handler) {
+            const handler = operation.handler;
+            handler(ctx, msg)
+              .then(r => sendResponse(resp, 200, r))
+              .catch(error => sendResponse(resp, 500, {error}));
+          } else {
+            sendResponse(resp, 500, {status: 500, message: `Operation [${operationId}] handler not found`});
+          }
+        } else {
+          sendResponse(resp, 404, {status: 404, message: `Operation [${operationId}] not found`});
         }
       } else {
-        resp.end(JSON.stringify({status: 422, body: {message: 'Unknown message type [' + opid + ']'}}));
+        console.log('operation not found', JSON.stringify(msg, null, ' '));
+        sendResponse(resp, 422, {status: 422, message: `Unknown message type [${operation}]`});
       }
-    } catch(e) {
+    } catch (e) {
+      resp.statusCode = 500;
       resp.end(JSON.stringify({status: 500, body: {message: e.toString()}}));
     }
   });
@@ -117,25 +157,26 @@ function init_manifest(ctx){
     }
   });
 }
-var srv = null;
+let srv = null;
 
 function server(ctx) {
   ctx = mk_ctx(ctx);
-  console.log("Context:", JSON.stringify(ctx, null, ' '));
+  console.log('Context:', JSON.stringify(ctx, null, ' '));
   return new Promise(function(resolve, reject) {
     srv = http.createServer((req, resp) => {
       dispatch(ctx, req, resp);
     });
     srv.listen(ctx.env.app_port, (err) => {
       if (err) {
-        return console.log('something bad happened', err);
+        console.error('server listen error:', err);
+        return;
       }
-      console.log(`server is listening on ${ctx.env.app_port}`);
-      return init_manifest(ctx)
+      console.log(`server started on http://localhost:${ctx.env.app_port}`);
+      init_manifest(ctx)
         .then(() => resolve(ctx))
         .catch((e) => {
+          console.log('ERROR:', e.statusCode || e, e.body);
           reject(e);
-          console.log("ERROR:", e.statusCode || e, e.body);
         });
     });
   });
