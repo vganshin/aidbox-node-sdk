@@ -37,19 +37,16 @@ const init_context = {
 };
 
 test('example app', () => {
-
-
-
-
   return app.start(init_context)
     .then((ctx) => {
       expect(ctx.manifest.id).toEqual(init_context.manifest.id);
-    return ctx.request({url: '/_report', method: 'get'}).then((x)=>{
-      app.stop();
-      expect(x.body).toBeGreaterThan(100);
+      return ctx.request({ url: '/_report', method: 'get' })
+        .then((resp) => {
+          console.log(resp);
+          expect(resp.body).toBeGreaterThan(100);
+          app.stop();
+        });
     });
-  });
-
 }, 10000);
 
 /*
