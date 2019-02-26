@@ -1,4 +1,4 @@
-var aidbox = require('../src/index.js');
+var aidbox = require('../src');
 
 function report(ctx, msg) {
   console.log('my operation handler\nctx:', ctx, '\nmsg:', msg);

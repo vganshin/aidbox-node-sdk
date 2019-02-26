@@ -41,7 +41,7 @@ function box_request(ctx, opts){
 function mk_query(ctx) {
   return function(){
     const q = Array.prototype.slice.call(arguments, 0);
-    console.log('SQL:', JSON.strigify(q, null, ' '));
+    console.log('SQL:', q);
     return box_request(ctx, {
       url: '/$sql',
       method: 'post',

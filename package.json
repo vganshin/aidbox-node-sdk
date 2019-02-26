@@ -5,8 +5,9 @@
   "main": "src/index.js",
   "scripts": {
     "test": "jest --forceExit && npm run lint",
-    "example": "node example.js",
-    "lint": "eslint src/*.js"
+    "lint": "eslint src/*.js",
+    "docker-compose": "docker-compose -f docker-compose-test.yaml --project-name sdk  up -d",
+    "docker-build": "docker build -t sdk_test -f Dockerfile-test ."
   },
   "repository": {
     "type": "git",
