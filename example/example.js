@@ -42,5 +42,5 @@ aidbox.start(ctx)
     console.log('connected to server and started');
   })
   .catch((err) => {
-    console.log(err);
+    console.log(err.body);
   });
