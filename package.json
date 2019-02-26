@@ -7,7 +7,8 @@
     "test": "jest --forceExit && npm run lint",
     "lint": "eslint src/*.js",
     "docker-compose": "docker-compose -f docker-compose-test.yaml --project-name sdk  up -d",
-    "docker-build": "docker build -t sdk_test -f Dockerfile-test ."
+    "docker-build": "docker build -t sdk_test -f Dockerfile-test .",
+    "docker-run": "docker run --network sdk_default --hostname app  -p 8989:8989 --env-file .env-test -v $(pwd):/app sdk_test npm test"
   },
   "repository": {
     "type": "git",
