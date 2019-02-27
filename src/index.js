@@ -6,7 +6,9 @@ const registredSubscription = {};
 function box_request(ctx, opts){
   return new Promise(function(resolve, reject) {
     const init_url = `${ctx.env.init_url}${opts.url}`;
-    console.log('Request:', opts.method, init_url);
+    if (ctx.debug) {
+      console.log('Request:', opts.method, init_url);
+    }
     const params = {
       url: init_url,
       json: true
@@ -41,7 +43,9 @@ function box_request(ctx, opts){
 function mk_query(ctx) {
   return function(){
     const q = Array.prototype.slice.call(arguments, 0);
-    console.log('SQL:', q);
+    if (ctx.debug) {
+      console.log('SQL:', q);
+    }
     return box_request(ctx, {
       url: '/$sql',
       method: 'post',
@@ -78,13 +82,17 @@ function mk_manifest(ctx) {
     Object.keys(subs).forEach((s) => {
       Object.keys(subs[s]).forEach((h) => {
         const id = `${s}_${h}`;
-        console.log(`register subscription [${s}] for handler: ${h} by id ${id}`);
+        if (ctx.debug) {
+          console.log(`register subscription [${s}] for handler: ${h} by id ${id}`);
+        }
         registredSubscription[id] = subs[s][h];
         manifest.subscriptions[s][h] = id;
       });
     });
   }
-  console.log('mk_manifest: ', JSON.stringify(manifest, null, ' '));
+  if (ctx.debug) {
+    console.log('mk_manifest: ', JSON.stringify(manifest, null, ' '));
+  }
   return manifest;
 }
 
@@ -104,14 +112,20 @@ function dispatch(ctx, req, resp) {
       const msg = JSON.parse(body);
       const operation = msg.type;
       if (operation === 'manifest') {
-        console.log('manifest', JSON.stringify(msg, null, ' '));
+        if (ctx.debug) {
+          console.log('manifest', JSON.stringify(msg, null, ' '));
+        }
         sendResponse(resp, 200, {status: 200, manifest: mk_manifest(ctx)});
       } else if (operation === 'config') {
-        console.log('config', JSON.stringify(msg, null, ' '));
+        if (ctx.debug) {
+          console.log('config', JSON.stringify(msg, null, ' '));
+        }
         ctx.state = msg.client;
         sendResponse(resp, 200, {});
       } else if (operation === 'subscription') {
-        console.log('subscription', JSON.stringify(msg, null, ' '));
+        if (ctx.debug) {
+          console.log('subscription', JSON.stringify(msg, null, ' '));
+        }
         sendResponse(resp, 200, {status: 200, message: 'Subscription'});
         const handlerId = msg.handler;
         if (handlerId in registredSubscription) {
@@ -122,7 +136,9 @@ function dispatch(ctx, req, resp) {
         }
       } else if (operation === 'operation') {
         const operationId = msg.operation.id;
-        console.log('operation', JSON.stringify(msg, null, ' '));
+        if (ctx.debug) {
+          console.log('operation', JSON.stringify(msg, null, ' '));
+        }
         if (operationId in ctx.manifest.operations) {
           const operation = ctx.manifest.operations[operationId];
           if (operation.handler) {
@@ -137,7 +153,9 @@ function dispatch(ctx, req, resp) {
           sendResponse(resp, 404, {status: 404, message: `Operation [${operationId}] not found`});
         }
       } else {
-        console.log('operation not found', JSON.stringify(msg, null, ' '));
+        if (ctx.debug) {
+          console.log('operation not found', JSON.stringify(msg, null, ' '));
+        }
         sendResponse(resp, 422, {status: 422, message: `Unknown message type [${operation}]`});
       }
     } catch (e) {
@@ -162,7 +180,9 @@ let srv = null;
 
 function server(ctx) {
   ctx = mk_ctx(ctx);
-  console.log('Context:', JSON.stringify(ctx, null, ' '));
+  if (ctx.debug) {
+    console.log('Context:', JSON.stringify(ctx, null, ' '));
+  }
   return new Promise(function(resolve, reject) {
     srv = http.createServer((req, resp) => {
       dispatch(ctx, req, resp);
