@@ -6,6 +6,9 @@ parserOptions:
   ecmaVersion: 2016
   sourceType: module
 rules:
+  quotes:
+    - error
+    - single
   indent:
     - error
     - 2

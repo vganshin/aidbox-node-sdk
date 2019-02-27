@@ -6,20 +6,23 @@ before_install:
   - curl -L https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` > docker-compose
   - chmod +x docker-compose
   - sudo mv docker-compose /usr/local/bin
-  - cp .env.tpl .env
-  - docker-compose up -d
-  - for i in {1..100}; do curl --silent localhost:7777 > /dev/null && break || echo -n '.' && sleep 1; done
-  - ip -4 addr show docker0 | grep -oP '(?<=inet\s)\d+(\.\d+){3}'
+  - sudo service postgresql stop
+  - npm install
+  - npm run docker-compose
+  - npm run docker-build
 
 language: node_js
 
 node_js:
-- 10.7.0
+- 8
+- 9
+- 10
+- 11
 cache:
   directories:
   - node_modules
 script:
-- env APP_HOST=172.17.0.1 npm test
+  - npm run docker-run
 deploy:
   provider: npm
   email: niquola@gmail.com

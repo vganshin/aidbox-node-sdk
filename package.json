@@ -1,12 +1,14 @@
 {
   "name": "aidbox",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "aidbox example plugin",
   "main": "src/index.js",
   "scripts": {
     "test": "jest --forceExit && npm run lint",
-    "example": "node example.js",
-    "lint": "eslint src/*.js"
+    "lint": "eslint src/*.js",
+    "docker-compose": "docker-compose -f docker-compose-test.yaml --project-name sdk  up -d",
+    "docker-build": "docker build -t sdk_test -f Dockerfile-test .",
+    "docker-run": "docker run --rm --network sdk_default --hostname app --name app  -p 8989:8989 --env-file .env-test -v $(pwd):/app -v $(pwd)/example/wait-for-it.sh:/usr/local/bin/wait-for-it.sh  sdk_test wait-for-it.sh devbox:8080 --strict --timeout=0 -- npm test"
   },
   "repository": {
     "type": "git",
@@ -29,6 +31,6 @@
   },
   "devDependencies": {
     "eslint": "^5.14.1",
-    "jest": "^23.6.0"
+    "jest": "^24.1.0"
   }
 }
