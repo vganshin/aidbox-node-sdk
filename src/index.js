@@ -84,7 +84,7 @@ function mk_manifest(ctx) {
         const id = `${s}_${h}`;
         if (ctx.debug) {
           console.log(`register subscription [${s}] for handler: ${h} by id ${id}`);
-        };
+        }
         registredSubscription[id] = subs[s][h];
         manifest.subscriptions[s][h] = id;
       });
@@ -119,8 +119,8 @@ function dispatch(ctx, req, resp) {
       } else if (operation === 'config') {
         if (ctx.debug) {
           console.log('config', JSON.stringify(msg, null, ' '));
-        ctx.state = msg.client;
         }
+        ctx.state = msg.client;
         sendResponse(resp, 200, {});
       } else if (operation === 'subscription') {
         if (ctx.debug) {
