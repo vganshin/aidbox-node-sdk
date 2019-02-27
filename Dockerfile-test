@@ -1,4 +1,4 @@
-FROM node:8.15.0-jessie
+FROM node:8.15.0-jessie-slim
 
 RUN mkdir /app
 WORKDIR /app
