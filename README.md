@@ -13,8 +13,9 @@
 * open ```.env``` and fill Aidbox license credentials
 * import environment variables ```source .env```
 * run local container network ```docker-compose up``` and wait when all started
-* go to http://localhost:8080/index.html#/signin and submit Aidbox client credentials (see it in .env file)
-* add "open" ```AccessPolicy``` in ```Access Control``` section in YAML-format - ```
+* go to http://localhost:8080/index.html#/signin and submit Aidbox client credentials (see it in ```.env``` file)
+* add "open" ```AccessPolicy``` in ```Access Control``` section in YAML-format: 
+```
 engine: allow
 resourceType: AccessPolicy
 ```
