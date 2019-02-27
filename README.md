@@ -19,7 +19,7 @@
 engine: allow
 resourceType: AccessPolicy
 ```
-* open "http://localhost:8080/_report" and obtain result of example app - count of ```Attribute``` resource
+* open http://localhost:8080/_report and obtain result of example app - count of ```Attribute``` resource
 
 To build your own App with NodeJs see [docs](https://docs.aidbox.app/aidbox-sdk/nodejs)
 
