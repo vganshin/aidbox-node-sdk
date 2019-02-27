@@ -1,6 +1,6 @@
 {
   "name": "aidbox",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "aidbox example plugin",
   "main": "src/index.js",
   "scripts": {
