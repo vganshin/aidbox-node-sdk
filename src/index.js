@@ -147,7 +147,7 @@ function dispatch(ctx, req, resp) {
   });
 }
 
-function init_manifest(ctx){
+function init_manifest(ctx) {
   return box_request(ctx, {
     url: '/App/$init',
     method: 'post',
@@ -157,6 +157,7 @@ function init_manifest(ctx){
     }
   });
 }
+
 let srv = null;
 
 function server(ctx) {

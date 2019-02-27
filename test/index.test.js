@@ -36,18 +36,16 @@ const init_context = {
   }
 };
 
-test('example app', () => {
-  return app.start(init_context)
-    .then((ctx) => {
-      expect(ctx.manifest.id).toEqual(init_context.manifest.id);
-      return ctx.request({ url: '/_report', method: 'get' })
-        .then((resp) => {
-          console.log(resp);
-          expect(resp.body).toBeGreaterThan(100);
-          app.stop();
-        });
-    });
-}, 10000);
+test('example app', async () => {
+  expect.assertions(2);
+  const ctx = await app.start(init_context);
+  expect(ctx.manifest.id).toEqual(init_context.manifest.id);
+
+  const body = await ctx.request({ url: '/_report', method: 'get' });
+  expect(body).toMatchObject({ count: expect.any(Number) });
+
+  app.stop();
+});
 
 /*
   start application with operation _report
