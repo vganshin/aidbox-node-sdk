@@ -187,7 +187,7 @@ function server(ctx) {
     srv = http.createServer((req, resp) => {
       dispatch(ctx, req, resp);
     });
-    srv.listen(ctx.env.app_port, (err) => {
+    srv.listen(ctx.env.app_port, '0.0.0.0', (err) => {
       if (err) {
         console.error('server listen error:', err);
         return;
