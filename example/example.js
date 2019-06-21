@@ -2,18 +2,17 @@ var aidbox = require('../src');
 
 function report(ctx, msg) {
   console.log('my operation handler\nctx:', ctx, '\nmsg:', msg);
-  return ctx.query('select count(*) FROM Attribute')
-    .then((data) => {
-      console.log('box response:', JSON.stringify(data, null, ' '));
-      return Promise.resolve({count: data[0].count});
-    });
+  return ctx.query('select count(*) FROM Attribute').then(data => {
+    console.log('box response:', JSON.stringify(data, null, ' '));
+    return Promise.resolve({ count: data[0].count });
+  });
 }
 
 function userSub(ctx, msg) {
   console.log('my userSub handler\nctx:', ctx, '\nmsg:', msg);
 }
 
-var APP_ID =  process.env.APP_ID || 'app-example';
+var APP_ID = process.env.APP_ID || 'app-example';
 
 var ctx = {
   env: {
@@ -37,17 +36,26 @@ var ctx = {
     operations: {
       report: {
         method: 'GET',
-        path: ["_report"],
+        path: ['_report'],
         handler: report
       }
     }
   }
 };
-console.log(ctx);
-aidbox.start(ctx)
+aidbox
+  .start(ctx)
   .then(() => {
-    console.log('connected to server and started');
+    ctx
+      .request({
+        method: 'PUT',
+        url: '/AccessPolicy/allow-all',
+        body: {
+          engine: 'allow',
+          resourceType: 'AccessPolicy'
+        }
+      })
+      .then(() => console.log('connected to server and started'));
   })
-  .catch((err) => {
+  .catch(err => {
     console.log(err.body);
   });

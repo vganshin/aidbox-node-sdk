@@ -183,6 +183,13 @@ function server(ctx) {
   if (ctx.debug) {
     console.log('Context:', JSON.stringify(ctx, null, ' '));
   }
+  if ('withoutServer' in ctx) {
+    return Promise.resolve({
+      ctx,
+      dispatch,
+      init_manifest
+    });
+  }
   return new Promise(function(resolve, reject) {
     srv = http.createServer((req, resp) => {
       dispatch(ctx, req, resp);
