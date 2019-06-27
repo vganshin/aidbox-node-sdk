@@ -4,12 +4,13 @@
   "description": "aidbox example plugin",
   "main": "src/index.js",
   "scripts": {
-    "test": "jest --forceExit && npm run lint",
+    "test": "npm run lint && nyc mocha",
     "lint": "eslint src/*.js",
-    "docker-compose": "docker-compose -f docker-compose-test.yaml --project-name sdk up -d",
-    "docker-compose-down": "docker-compose -f docker-compose-test.yaml --project-name sdk down",
-    "docker-build": "docker build -t sdk_test -f Dockerfile-test .",
-    "docker-run": "docker run --rm --network sdk_default --hostname app --name app  -p 8989:8989 --env-file .env-test -v $(pwd):/app -v $(pwd)/example/wait-for-it.sh:/usr/local/bin/wait-for-it.sh  sdk_test wait-for-it.sh devbox:8080 --strict --timeout=0 -- npm test"
+    "test:compose": "docker-compose -f docker-compose-test.yaml --project-name sdk up -d",
+    "test:compose:down": "docker-compose -f docker-compose-test.yaml --project-name sdk down",
+    "test:build": "docker build -t sdk_test -f Dockerfile-test .",
+    "test:docker": "docker run --rm --network sdk_default --hostname app --name app  -p 8989:8989 --env-file .env-test -v $(pwd):/app -v $(pwd)/example/wait-for-it.sh:/usr/local/bin/wait-for-it.sh  sdk_test wait-for-it.sh devbox:8080 --strict --timeout=0 -- npm test",
+    "test:codecov": "codecov"
   },
   "repository": {
     "type": "git",
@@ -28,10 +29,13 @@
   "homepage": "https://github.com/Aidbox/aidbox-node-sdk#readme",
   "dependencies": {
     "request": "^2.88.0",
-    "ws": "^7.0.0"
+    "ws": "^7.0.1"
   },
   "devDependencies": {
-    "eslint": "^5.16.0",
-    "jest": "^24.8.0"
+    "chai": "^4.2.0",
+    "codecov": "^3.5.0",
+    "eslint": "^6.0.1",
+    "mocha": "^6.1.4",
+    "nyc": "^14.1.1"
   }
 }

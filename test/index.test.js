@@ -1,3 +1,4 @@
+const { expect } = require('chai');
 const app = require('../src');
 
 const APP_ID =  process.env.APP_ID || 'app-example';
@@ -21,11 +22,6 @@ const init_context = {
   manifest: {
     id: APP_ID,
     type: 'app',
-    // subscriptions: {
-    //   User: {
-    //     handler: userSub
-    //   }
-    // },
     operations: {
       report: {
         method: 'GET',
@@ -36,23 +32,22 @@ const init_context = {
   }
 };
 
-test('example app', async () => {
-  expect.assertions(2);
-  const ctx = await app.start(init_context);
-  expect(ctx.manifest.id).toEqual(init_context.manifest.id);
+let ctx = null;
 
-  const body = await ctx.request({ url: '/_report', method: 'get' });
-  expect(body).toMatchObject({ count: expect.any(Number) });
+describe('example app', () => {
+  before(async () => {
+    ctx = await app.start(init_context);
+  })
+  after(() => {
+    app.stop();
+  });
 
-  app.stop();
+  it('context', async () => {
+    expect(ctx.manifest.id).to.equal(init_context.manifest.id);
+  });
+
+  it('get /_report', async () => {
+    const body = await ctx.request({ url: '/_report', method: 'get' });
+    expect(body).to.be.an('object').and.have.property('count');
+  });
 });
-
-/*
-  start application with operation _report
-  send request to fhir server _report and check response
-
-  *** with sub
- */
- 
-
-

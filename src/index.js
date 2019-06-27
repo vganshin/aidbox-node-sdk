@@ -197,10 +197,10 @@ function server(ctx) {
     srv.listen(ctx.env.app_port, '0.0.0.0', (err) => {
       if (err) {
         console.error('server listen error:', err);
-        return;
+        return reject(err);
       }
       console.log(`server started on http://localhost:${ctx.env.app_port}`);
-      init_manifest(ctx)
+      return init_manifest(ctx)
         .then(() => resolve(ctx))
         .catch((e) => {
           console.log('ERROR:', e.statusCode || e, e.body);
