@@ -28,7 +28,9 @@ function box_request(ctx, opts){
     const request_params = Object.assign({}, opts, params);
     request(request_params, (err, resp, body) => {
       if (err) {
-        console.error(err);
+        if (ctx.debug) {
+          console.error(err);
+        }
         reject(err);
       } else {
         if(resp.statusCode && resp.statusCode < 300){
@@ -43,14 +45,16 @@ function box_request(ctx, opts){
 
 function mk_query(ctx) {
   return function(){
-    const q = Array.prototype.slice.call(arguments, 0);
+    const query = Array.prototype.slice.call(arguments, 0);
     if (ctx.debug) {
-      console.log('SQL:', q);
+      console.log('SQL:', query[0]);
     }
     return box_request(ctx, {
-      url: '/$sql',
+      url: '/$psql',
       method: 'post',
-      body: q
+      body: {
+        query: query[0]
+      }
     });
   };
 }
@@ -177,43 +181,39 @@ function init_manifest(ctx) {
   });
 }
 
-let srv = null;
-
 function server(ctx) {
-  ctx = mk_ctx(ctx);
-  if (ctx.debug) {
-    console.log('Context:', JSON.stringify(ctx, null, ' '));
+  const context = mk_ctx({ ...ctx });
+  if (context.debug) {
+    console.log('Context:', JSON.stringify(context, null, ' '));
   }
-  if ('withoutServer' in ctx) {
+  if ('withoutServer' in context) {
     return Promise.resolve({
-      ctx,
+      ctx: context,
       dispatch,
       init_manifest
     });
   }
   return new Promise(function(resolve, reject) {
-    srv = http.createServer((req, resp) => {
-      dispatch(ctx, req, resp);
+    context.server = http.createServer((req, resp) => {
+      dispatch(context, req, resp);
     });
-    srv.listen(ctx.env.app_port, '0.0.0.0', (err) => {
-      if (err) {
-        console.error('server listen error:', err);
-        return reject(err);
+    context.stop = (cb) => context.server.close(cb);
+    context.server.on('error', (err) => {
+      reject(err);
+      context.server.close();
+    })
+    context.server.listen(context.env.app_port, '0.0.0.0', () => {
+      if (context.debug) {
+        console.log(`server started on http://localhost:${context.env.app_port}`);
       }
-      console.log(`server started on http://localhost:${ctx.env.app_port}`);
-      return init_manifest(ctx)
-        .then(() => resolve(ctx))
+      return init_manifest(context)
+        .then(() => resolve(context))
         .catch((e) => {
-          console.log('ERROR:', e.statusCode || e, e.body);
+          context.stop();
           reject(e);
         });
     });
   });
 }
 
-module.exports = {
-  start: server,
-  stop: ()=>{
-    srv && srv.close();
-  }
-};
+module.exports = server;

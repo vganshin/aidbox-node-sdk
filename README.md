@@ -14,7 +14,6 @@ npm install aidbox
 * install dependencies ```npm install```
 * copy environment  template file ```cp .env-tpl .env```
 * open ```.env``` and fill Aidbox license credentials
-* import environment variables ```source .env```
 * run local container network ```docker-compose up``` and wait when all started
 * open http://localhost:8080/_report and obtain result of example app - count of ```Attribute``` resource
 

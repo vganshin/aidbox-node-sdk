@@ -4,11 +4,16 @@
   "description": "aidbox SDK",
   "main": "src/index.js",
   "scripts": {
-    "test": "nyc mocha",
+    "test": "jest",
+    "test:watch": "jest --watch",
     "lint": "eslint src/*.js",
     "test:compose": "docker-compose -f docker-compose-test.yaml up -d",
     "test:compose:down": "docker-compose -f docker-compose-test.yaml down",
-    "test:codecov": "nyc report --reporter=text-lcov > coverage.lcov && codecov"
+    "test:codecov": "codecov"
+  },
+  "jest": {
+    "coverageDirectory": "./coverage/",
+    "collectCoverage": true
   },
   "repository": {
     "type": "git",
@@ -33,6 +38,7 @@
     "chai": "^4.2.0",
     "codecov": "^3.5.0",
     "eslint": "^6.0.1",
+    "jest": "^24.8.0",
     "mocha": "^6.1.4",
     "nyc": "^14.1.1"
   }

@@ -4,7 +4,7 @@ function report(ctx, msg) {
   console.log('my operation handler\nctx:', ctx, '\nmsg:', msg);
   return ctx.query('select count(*) FROM Attribute').then(data => {
     console.log('box response:', JSON.stringify(data, null, ' '));
-    return Promise.resolve({ count: data[0].count });
+    return Promise.resolve({ count: data[0].result[0].count });
   });
 }
 
@@ -42,10 +42,9 @@ var ctx = {
     }
   }
 };
-aidbox
-  .start(ctx)
-  .then(() => {
-    ctx
+aidbox(ctx)
+  .then((context) => {
+    context
       .request({
         method: 'PUT',
         url: '/AccessPolicy/allow-all',
@@ -57,5 +56,5 @@ aidbox
       .then(() => console.log('connected to server and started'));
   })
   .catch(err => {
-    console.log(err.body);
+    console.log(err);
   });
