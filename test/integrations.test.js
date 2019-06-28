@@ -1,6 +1,6 @@
 const app = require('../src');
 
-const { init_context, report, userSub, pingAidbox, timeout } = require('./utils');
+const { init_context, pingAidbox, timeout } = require('./utils');
 
 let ctx = null;
 

@@ -1,22 +1,12 @@
 env:
-  node: true
+  commonjs: true
   es6: true
+  node: true
+  jest: true
 extends: 'eslint:recommended'
+globals:
+  Atomics: readonly
+  SharedArrayBuffer: readonly
 parserOptions:
-  ecmaVersion: 2016
-  sourceType: module
-rules:
-  quotes:
-    - error
-    - single
-  indent:
-    - error
-    - 2
-  linebreak-style:
-    - error
-    - unix
-  semi:
-    - error
-    - always
-  no-console:
-    - 0
+  ecmaVersion: 2018
+rules: {}

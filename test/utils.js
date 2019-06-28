@@ -1,7 +1,7 @@
 const request = require('request');
 const APP_ID =  process.env.APP_ID;
 
-function report(ctx, msg) {
+function report(ctx) {
   return ctx.query('select count(*) FROM Attribute').then(data => {
     return Promise.resolve({ count: data[0].result[0].count });
   });
@@ -81,7 +81,7 @@ function timeout(ms) {
 function pingAidbox(n = 0) {
   console.log(`Connecting to aidbox... ${init_context.env.init_url}`);
   return new Promise((resolve, reject) => {
-    const response = async (err, resp, body) => {
+    const response = async (err) => {
       if (err) {
         console.log('Error connecting: ', err.message);
         if (n > 10) {
@@ -102,7 +102,7 @@ function pingAidbox(n = 0) {
       }
     }, response)
   });
-};
+}
 
 const init_context = {
   env: {

@@ -6,7 +6,7 @@
   "scripts": {
     "test": "jest",
     "test:watch": "jest --watch",
-    "lint": "eslint src/*.js",
+    "lint": "eslint .",
     "test:compose": "docker-compose -f docker-compose-test.yaml up -d",
     "test:compose:down": "docker-compose -f docker-compose-test.yaml down",
     "test:codecov": "codecov"
