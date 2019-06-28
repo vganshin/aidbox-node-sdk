@@ -1,8 +1,33 @@
+const EventEmitter = require('events');
+
 const app = require('../src');
 
 const { init_context, pingAidbox, timeout } = require('./utils');
 
 let ctx = null;
+
+async function mockReq (c, query) {
+  class MyEmitter extends EventEmitter {}
+  const rq = new MyEmitter();
+  const rs = {
+    statusCode: null,
+    headers: {},
+    result: null,
+    setHeader(p, v) {
+      rs.headers[p] = v;
+    },
+    end(v) {
+      rs.result = v;
+    }
+  };
+  c.dispatch(c.ctx, rq, rs);
+  rq.emit('data', query)
+  rq.emit('end');
+  while(rs.statusCode === null) {
+    await timeout(500);
+  }
+  return Promise.resolve(rs);
+}
 
 beforeAll(async () => {
   await pingAidbox();
@@ -19,21 +44,110 @@ test('register app', async () => {
 });
 
 test('register app withoutServer', async () => {
-  expect.assertions(1);
+  expect.assertions(8);
   const ic = { ...init_context };
+  ic.debug = true;
   ic.withoutServer = true;
+  ic.manifest.operations.test_error = {
+    method: 'GET',
+    path: ["_testError"],
+    handler() {
+      throw new Error('handle error');
+    }
+  };
+  ic.manifest.operations.test_error_2 = {
+    method: 'GET',
+    path: ["_testError2"],
+    handler() {
+      return Promise.reject('handle error 2');
+    }
+  };
+  ic.manifest.operations.test_error_3 = {};
   await expect(app(ic)).resolves.toMatchObject({
     ctx: expect.any(Object),
     dispatch: expect.any(Function),
     init_manifest: expect.any(Function)
   });
+  let c = await app(ic);
+
+  await expect(mockReq(c, '{"type": "subscription", "handler": "unknown"}'))
+    .resolves
+    .toMatchObject({
+      statusCode: 404,
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      result: '{"status":404,"message":"Subscription [unknown] not found"}'
+    });
+
+  await expect(mockReq(c, 'wrong'))
+    .resolves
+    .toMatchObject({
+      statusCode: 500,
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      result: '{"status":500,"message":"SyntaxError: Unexpected token w in JSON at position 0"}'
+    });
+
+  await expect(mockReq(c, '{"type": "operation", "operation": { "id": "not-found" } }'))
+    .resolves
+    .toMatchObject({
+      statusCode: 404,
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      result: '{"status":404,"message":"Operation [not-found] not found"}'
+    });
+
+  await expect(mockReq(c, '{"type": "operation", "operation": { "id": "test_error" } }'))
+    .resolves
+    .toMatchObject({
+      statusCode: 500,
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      result: '{"status":500,"message":"Error: handle error"}'
+    });
+
+  await expect(mockReq(c, '{"type": "operation", "operation": { "id": "test_error_3" } }'))
+    .resolves
+    .toMatchObject({
+      statusCode: 500,
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      result: '{"status":500,"message":"Operation [test_error_3] handler not found"}'
+    });
+
+  await expect(mockReq(c, '{"type": "operation", "operation": { "id": "test_error_2" } }'))
+    .resolves
+    .toMatchObject({
+      statusCode: 500,
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      result: '{"status":500,"message":"handle error 2"}'
+    });
+
+  await expect(mockReq(c, '{"type": "wrong-type" }'))
+    .resolves
+    .toMatchObject({
+      statusCode: 422,
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      result: '{"status":422,"message":"Unknown message type [wrong-type]"}'
+    });
+
 });
 
 test('register app in already use port', async () => {
   expect.assertions(1);
-  await expect(app({ ...init_context })).rejects.toThrow('listen EADDRINUSE: address already in use 0.0.0.0:8989');
+  await expect(app({ ...init_context }))
+    .rejects
+    .toThrow();
 });
-
 
 test('get /_report', async () => {
   expect.assertions(1);
@@ -96,6 +210,13 @@ test('subscription', async () => {
     });
 });
 
+test('wrong request', async () => {
+  expect.assertions(1);
+  await expect(ctx.request({ url: '/wrong-url', method: 'wrong' }))
+    .rejects
+    .toThrow('socket hang up');
+});
+
 test('app server was stopped', (done) => {
   ctx.stop(done);
 });
@@ -111,4 +232,4 @@ test('register app wrong manifest', async () => {
       statusCode: 500,
       body: { message: 'wrong-url: Name or service not known' }
     });
-});
+}, 1000 * 15);

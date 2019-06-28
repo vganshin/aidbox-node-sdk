@@ -131,7 +131,6 @@ function dispatch(ctx, req, resp) {
         if (ctx.debug) {
           console.log('subscription', JSON.stringify(msg, null, ' '));
         }
-        sendResponse(resp, 200, {status: 200, message: 'Subscription'});
         const handlerId = msg.handler;
         if (handlerId in registredSubscription) {
           registredSubscription[handlerId](ctx, msg);
@@ -150,7 +149,7 @@ function dispatch(ctx, req, resp) {
             const handler = operation.handler;
             handler(ctx, msg)
               .then(r => sendResponse(resp, 200, r))
-              .catch(error => sendResponse(resp, 500, {error}));
+              .catch(error => sendResponse(resp, 500, {status: 500, message: error}));
           } else {
             sendResponse(resp, 500, {status: 500, message: `Operation [${operationId}] handler not found`});
           }
@@ -165,7 +164,7 @@ function dispatch(ctx, req, resp) {
       }
     } catch (e) {
       resp.statusCode = 500;
-      resp.end(JSON.stringify({status: 500, body: {message: e.toString()}}));
+      resp.end(JSON.stringify({status: 500, message: e.toString()}));
     }
   });
 }
