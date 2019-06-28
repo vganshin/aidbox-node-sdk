@@ -51,7 +51,7 @@ const pingAidbox = (n = 0) => {
           return reject('Cannot connect to Aidbox');
         }
         await timeout(5000);
-        return pingAidbox(n + 1);
+        return resolve(pingAidbox(n + 1));
       }
       console.log('Connected to Aidbox');
       return resolve();
@@ -72,7 +72,7 @@ describe('example app', () => {
     this.timeout(11 * 5000);
     await pingAidbox();
   })
-  after(async () => {
+  after(() => {
     app.stop();
   });
 
