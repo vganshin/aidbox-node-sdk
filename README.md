@@ -24,6 +24,7 @@ To build your own App with NodeJs see [docs](https://docs.aidbox.app/aidbox-sdk/
 
 * Install dependencies ```npm install```
 * Up network with Devbox and db ```npm run test:compose```
+* Source test environment ```source .env-test```
 * Run tests inside container ```npm run test```
 
 

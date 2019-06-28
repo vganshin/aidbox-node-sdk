@@ -4,10 +4,10 @@
   "description": "aidbox SDK",
   "main": "src/index.js",
   "scripts": {
-    "test": "source .env-test && npm run lint && nyc mocha",
+    "test": "nyc mocha",
     "lint": "eslint src/*.js",
     "test:compose": "docker-compose -f docker-compose-test.yaml up -d",
-    "test:compose:down": "docker-compose -f docker-compose-test.yaml --project-name sdk down",
+    "test:compose:down": "docker-compose -f docker-compose-test.yaml down",
     "test:codecov": "codecov"
   },
   "repository": {

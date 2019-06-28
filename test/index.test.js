@@ -68,7 +68,8 @@ const pingAidbox = (n = 0) => {
 };
 
 describe('example app', () => {
-  before(async () => {
+  before(async function () {
+    this.timeout(11 * 5000);
     await pingAidbox();
   })
   after(async () => {

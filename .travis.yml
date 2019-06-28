@@ -25,6 +25,8 @@ cache:
   directories:
   - node_modules
 script:
+  - source .env-test
+  - npm run lint
   - npm run test
   - npm run test:codecov
 deploy:
