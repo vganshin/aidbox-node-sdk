@@ -1,15 +1,13 @@
 {
   "name": "aidbox",
   "version": "1.1.0",
-  "description": "aidbox example plugin",
+  "description": "aidbox SDK",
   "main": "src/index.js",
   "scripts": {
-    "test": "npm run lint && nyc mocha",
+    "test": "source .env-test && npm run lint && nyc mocha",
     "lint": "eslint src/*.js",
-    "test:compose": "docker-compose -f docker-compose-test.yaml --project-name sdk up -d",
+    "test:compose": "docker-compose -f docker-compose-test.yaml up -d",
     "test:compose:down": "docker-compose -f docker-compose-test.yaml --project-name sdk down",
-    "test:build": "docker build -t sdk_test -f Dockerfile-test .",
-    "test:docker": "docker run --rm --network sdk_default --hostname app --name app  -p 8989:8989 --env-file .env-test -v $(pwd):/app -v $(pwd)/example/wait-for-it.sh:/usr/local/bin/wait-for-it.sh  sdk_test wait-for-it.sh devbox:8080 --strict --timeout=0 -- npm test",
     "test:codecov": "codecov"
   },
   "repository": {

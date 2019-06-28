@@ -1,4 +1,5 @@
 const { expect } = require('chai');
+const request = require('request');
 const app = require('../src');
 
 const APP_ID =  process.env.APP_ID || 'app-example';
@@ -15,7 +16,7 @@ const init_context = {
     init_client_secret: process.env.APP_INIT_CLIENT_SECRET,
 
     app_id: APP_ID,
-    app_url: process.env.APP_URL,
+    app_url: process.env.APP_HOST,
     app_port: process.env.APP_PORT,
     app_secret: process.env.APP_SECRET
   },
@@ -34,12 +35,54 @@ const init_context = {
 
 let ctx = null;
 
+const AUTH_HEADER = 'cm9vdDpzZWNyZXQ=';
+
+function timeout(ms) {
+  return new Promise(r => setTimeout(() => r(), ms));
+}
+
+const pingAidbox = (n = 0) => {
+  console.log(`Connecting to aidbox... ${init_context.env.init_url}`);
+  return new Promise((resolve, reject) => {
+    const response = async (err, resp, body) => {
+      if (err) {
+        console.log('Error connecting: ', err.message);
+        if (n > 10) {
+          return reject('Cannot connect to Aidbox');
+        }
+        await timeout(5000);
+        return pingAidbox(n + 1);
+      }
+      console.log('Connected to Aidbox');
+      return resolve();
+    };
+    return request({
+      method: 'get',
+      url: `${init_context.env.init_url}/Patient`,
+      auth: {
+        user: init_context.env.init_client_id,
+        pass: init_context.env.init_seceret
+      }
+    }, response)
+  });
+};
+
 describe('example app', () => {
   before(async () => {
-    ctx = await app.start(init_context);
+    await pingAidbox();
   })
-  after(() => {
+  after(async () => {
     app.stop();
+  });
+
+  it('register app', (done) => {
+    app.start(init_context)
+      .then((c) => {
+        expect(c).to.be.an('object');
+        ctx = c;
+        done();
+      })
+      .catch(done);
   });
 
   it('context', async () => {

@@ -1,8 +1,6 @@
 # Aidbox NodeJS SDK
 
-[![Build Status](https://travis-ci.org/Aidbox/aidbox-node-sdk.svg?branch=master)](https://travis-ci.org/Aidbox/aidbox-node-sdk)
-
-[![npm version](https://badge.fury.io/js/aidbox.svg)](https://badge.fury.io/js/aidbox)
+[![Build Status](https://travis-ci.org/Aidbox/aidbox-node-sdk.svg?branch=master)](https://travis-ci.org/Aidbox/aidbox-node-sdk) [![npm version](https://badge.fury.io/js/aidbox.svg)](https://badge.fury.io/js/aidbox) [![codecov](https://codecov.io/gh/Aidbox/example/branch/master/graph/badge.svg)](https://codecov.io/gh/Aidbox/example)
 
 [Docs](https://docs.aidbox.app/aidbox-sdk/aidbox-apps)
 
@@ -24,9 +22,9 @@ To build your own App with NodeJs see [docs](https://docs.aidbox.app/aidbox-sdk/
 
 ## Launch tests
 
-* Up network with Devbox and db ```npm run docker-compose```
-* Build image with SDK application ```npm run docker-build```
-* Run tests inside container ```npm run docker-run```
+* Install dependencies ```npm install```
+* Up network with Devbox and db ```npm run test:compose```
+* Run tests inside container ```npm run test```
 
 
 Powered by [Health Samurai](http://www.health-samurai.io) | [Aidbox](http://www.health-samurai.io/aidbox) | [Fhirbase](http://www.health-samurai.io/fhirbase)

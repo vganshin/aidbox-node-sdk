@@ -8,6 +8,7 @@ function box_request(ctx, opts){
     const init_url = `${ctx.env.init_url}${opts.url}`;
     if (ctx.debug) {
       console.log('Request:', opts.method, init_url);
+      console.log('Request body:', opts.body);
     }
     const params = {
       url: init_url,
