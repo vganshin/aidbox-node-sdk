@@ -1,6 +1,6 @@
 # Aidbox NodeJS SDK
 
-[![Build Status](https://travis-ci.org/Aidbox/aidbox-node-sdk.svg?branch=master)](https://travis-ci.org/Aidbox/aidbox-node-sdk) [![npm version](https://badge.fury.io/js/aidbox.svg)](https://badge.fury.io/js/aidbox) [![codecov](https://codecov.io/gh/Aidbox/example/branch/master/graph/badge.svg)](https://codecov.io/gh/Aidbox/example)
+[![Build Status](https://travis-ci.org/Aidbox/aidbox-node-sdk.svg?branch=master)](https://travis-ci.org/Aidbox/aidbox-node-sdk) [![npm version](https://badge.fury.io/js/aidbox.svg)](https://badge.fury.io/js/aidbox) [![codecov](https://codecov.io/gh/Aidbox/aidbox-node-sdk/branch/master/graph/badge.svg)](https://codecov.io/gh/Aidbox/aidbox-node-sdk)
 
 [Docs](https://docs.aidbox.app/aidbox-sdk/aidbox-apps)
 
