@@ -21,6 +21,9 @@ async function mockReq (c, query) {
     }
   };
   c.dispatch(c.ctx, rq, rs);
+  rq.headers = {
+    authorization: `Basic ${Buffer.from(`${c.ctx.env.app_id}:${c.ctx.env.app_secret}`).toString('base64')}`
+  };
   rq.emit('data', query)
   rq.emit('end');
   while(rs.statusCode === null) {
@@ -151,7 +154,9 @@ test('register app in already use port', async () => {
 
 test('get /_report', async () => {
   expect.assertions(1);
-  await expect(ctx.request({ url: '/_report' })).resolves.toMatchObject({ count: expect.any(Number) });
+  await expect(ctx.request({ url: '/_report' }))
+    .resolves
+    .toMatchObject({ count: expect.any(Number) });
 });
 
 test('subscription', async () => {
@@ -230,6 +235,13 @@ test('register app wrong manifest', async () => {
     .rejects
     .toMatchObject({
       statusCode: 500,
-      body: { message: 'wrong-url: Name or service not known' }
+      body: {
+        id: "exception",
+        issue: [{
+          code: "exception",
+          diagnostics: "nil",
+          severity: "fatal"
+        }]
+      }
     });
 }, 1000 * 15);

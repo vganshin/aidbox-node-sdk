@@ -106,6 +106,11 @@ function sendResponse(r, status, message) {
   r.end(JSON.stringify(message));
 }
 
+function checkAuth(basic, app_id, app_secret) {
+  const [auth] = basic.split(' ').slice(1, 2);
+  return auth === Buffer.from(`${app_id}:${app_secret}`).toString('base64');
+}
+
 function dispatch(ctx, req, resp) {
   let body = '';
   req.on('data', chunk => {
@@ -115,19 +120,12 @@ function dispatch(ctx, req, resp) {
     resp.setHeader('Content-Type', 'application/json');
     try {
       const msg = JSON.parse(body);
+      if (!('authorization' in req.headers) || !checkAuth(req.headers.authorization, ctx.env.app_id, ctx.env.app_secret)) {
+        sendResponse(resp, 403, {status: 403, message: 'Access Denied'});
+        return;
+      }
       const operation = msg.type;
-      if (operation === 'manifest') {
-        if (ctx.debug) {
-          console.log('manifest', JSON.stringify(msg, null, ' '));
-        }
-        sendResponse(resp, 200, {status: 200, manifest: mk_manifest(ctx)});
-      } else if (operation === 'config') {
-        if (ctx.debug) {
-          console.log('config', JSON.stringify(msg, null, ' '));
-        }
-        ctx.state = msg.client;
-        sendResponse(resp, 200, {});
-      } else if (operation === 'subscription') {
+      if (operation === 'subscription') {
         if (ctx.debug) {
           console.log('subscription', JSON.stringify(msg, null, ' '));
         }
@@ -171,12 +169,9 @@ function dispatch(ctx, req, resp) {
 
 function init_manifest(ctx) {
   return box_request(ctx, {
-    url: '/App/$init',
-    method: 'post',
-    body: {
-      url: ctx.env.app_url,
-      secret: ctx.env.app_secret
-    }
+    url: `/App/${ctx.env.app_id}`,
+    method: 'put',
+    body: mk_manifest(ctx)
   });
 }
 
