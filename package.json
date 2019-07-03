@@ -30,10 +30,6 @@
     "url": "https://github.com/Aidbox/aidbox-node-sdk/issues"
   },
   "homepage": "https://github.com/Aidbox/aidbox-node-sdk#readme",
-  "dependencies": {
-    "request": "^2.88.0",
-    "ws": "^7.0.1"
-  },
   "devDependencies": {
     "chai": "^4.2.0",
     "codecov": "^3.5.0",
