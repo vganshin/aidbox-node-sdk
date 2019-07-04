@@ -1,10 +1,39 @@
 const request = require('request');
+const EventEmitter = require('events');
 const APP_ID =  process.env.APP_ID;
 
 function report(ctx) {
   return ctx.query('select count(*) FROM Attribute').then(data => {
     return Promise.resolve({ count: data[0].result[0].count });
   });
+}
+
+async function mockReq (c, query) {
+  class MyEmitter extends EventEmitter {}
+  const rq = new MyEmitter();
+  const rs = {
+    statusCode: null,
+    headers: {},
+    result: null,
+    setHeader(p, v) {
+      rs.headers[p] = v;
+    },
+    end(v) {
+      rs.result = v;
+    }
+  };
+  c.dispatch(c.ctx, rq, rs);
+  rq.headers = {
+    authorization: `Basic ${Buffer.from(`${c.ctx.env.app_id}:${c.ctx.env.app_secret}`).toString('base64')}`
+  };
+  if (query === '{"type": "fail-my-auth" }')
+    rq.headers.authorization = 'Basic authfail';
+  rq.emit('data', query);
+  rq.emit('end');
+  while(rs.statusCode === null) {
+    await timeout(500);
+  }
+  return Promise.resolve(rs);
 }
 
 async function userSub(ctx, msg) {
@@ -138,5 +167,6 @@ module.exports = {
   userSub,
   init_context,
   pingAidbox,
-  timeout
+  timeout,
+  mockReq
 }
