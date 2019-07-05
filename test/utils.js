@@ -116,7 +116,7 @@ function pingAidbox(n = 0) {
         if (n > 10) {
           return reject('Cannot connect to Aidbox');
         }
-        await timeout(15000);
+        //await timeout(15000);
         return resolve(pingAidbox(n + 1));
       }
       console.log('Connected to Aidbox');
