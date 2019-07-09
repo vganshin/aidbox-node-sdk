@@ -1,36 +1,8 @@
-const EventEmitter = require('events');
-
 const app = require('../src');
 
-const { init_context, pingAidbox, timeout } = require('./utils');
+const { init_context, pingAidbox, timeout, mockReq } = require('./utils');
 
 let ctx = null;
-
-async function mockReq (c, query) {
-  class MyEmitter extends EventEmitter {}
-  const rq = new MyEmitter();
-  const rs = {
-    statusCode: null,
-    headers: {},
-    result: null,
-    setHeader(p, v) {
-      rs.headers[p] = v;
-    },
-    end(v) {
-      rs.result = v;
-    }
-  };
-  c.dispatch(c.ctx, rq, rs);
-  rq.headers = {
-    authorization: `Basic ${Buffer.from(`${c.ctx.env.app_id}:${c.ctx.env.app_secret}`).toString('base64')}`
-  };
-  rq.emit('data', query)
-  rq.emit('end');
-  while(rs.statusCode === null) {
-    await timeout(500);
-  }
-  return Promise.resolve(rs);
-}
 
 beforeAll(async () => {
   await pingAidbox();
@@ -38,8 +10,11 @@ beforeAll(async () => {
 
 test('register app', async () => {
   expect.assertions(3);
-  const c = { ...init_context };
+  let c = { ...init_context };
   c.debug = true;
+  c.state = {};
+  c.state.id = init_context.env.init_client_id;
+  c.state.secret = init_context.env.init_client_secret;
   ctx = await app(c);
   expect(ctx.manifest).toEqual(init_context.manifest);
   expect(ctx.stop).toEqual(expect.any(Function));
@@ -47,8 +22,8 @@ test('register app', async () => {
 });
 
 test('register app withoutServer', async () => {
-  expect.assertions(8);
-  const ic = { ...init_context };
+  expect.assertions(9);
+  let ic = { ...init_context };
   ic.debug = true;
   ic.withoutServer = true;
   ic.manifest.operations.test_error = {
@@ -143,6 +118,15 @@ test('register app withoutServer', async () => {
       result: '{"status":422,"message":"Unknown message type [wrong-type]"}'
     });
 
+  await expect(mockReq(c, '{"type": "fail-my-auth" }'))
+    .resolves
+    .toMatchObject({
+      statusCode: 403,
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      result: '{"status":403,"message":"Access Denied"}'
+    });
 });
 
 test('register app in already use port', async () => {
