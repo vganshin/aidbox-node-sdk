@@ -1,7 +1,7 @@
 {
   "name": "aidbox",
-  "version": "1.1.0",
-  "description": "aidbox SDK",
+  "version": "2.0.0-beta.0",
+  "description": "idbox SDK",
   "main": "src/index.js",
   "scripts": {
     "test": "jest",
