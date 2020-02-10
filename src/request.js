@@ -38,7 +38,7 @@ module.exports = function({
       });
       res.on('end', () => {
         try {
-          if (json) {
+          if (json && response && response.length > 0) {
             response = JSON.parse(response);
           }
           resolve({
