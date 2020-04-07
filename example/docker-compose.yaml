@@ -1,8 +1,7 @@
 version: '3.1'
 services:
   devbox:
-    image: "healthsamurai/devbox:canary"
-    command: ["wait-for-it.sh", "database:5432", "--strict", "--timeout=0", "--", "java", "-jar", "/app.jar"]
+    image: "healthsamurai/devbox:0.5.0-SNAPSHOT"
     depends_on:
       - devbox-db
     links:
@@ -18,13 +17,16 @@ services:
       PGUSER: postgres
       PGPASSWORD: postgres
       AIDBOX_CONFIG: /var/config/config.edn
+      AIDBOX_PORT: 8080
     volumes:
       - ./wait-for-it.sh:/usr/local/bin/wait-for-it.sh
       - ./config:/var/config
   devbox-db:
-    image: "aidbox/db:11.1.0"
+    image: "aidbox/db:11.4.0.4"
     ports:
-      - "5432:5432"
+      - "5435:5432"
+    volumes:
+    - "./pgdata:/data"
     environment:
       POSTGRES_USER:     postgres
       POSTGRES_PASSWORD: postgres
@@ -38,7 +40,7 @@ services:
       - devbox
     env_file:
       - .env
-    ports: 
+    ports:
       - "8989:8989"
     volumes:
       - .:/app
